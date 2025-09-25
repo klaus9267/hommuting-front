@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "pattern": "**/*",
+      "prompt": [
+        "항상 한국어로 응답하세요.",
+        "의존성 추가/변경은 사전 승인 없이 하지 않습니다.",
+        "파일의 기존 들여쓰기 스타일과 폭을 그대로 유지합니다.",
+        "불필요한 큰 리팩터링/마이그레이션 제안 금지. 요청된 범위만 변경합니다.",
+        "코드는 각 파일의 책임에 맞게 작성합니다 (단일 책임 원칙 준수).",
+        "코드는 간단하게, 필요한 최소 범위로 작성합니다 (YAGNI/과설계 금지)."
+      ]
+    },
+    {
+      "pattern": "src/**/*.{ts,tsx}",
+      "prompt": [
+        "TypeScript strict 기준으로 코드를 작성합니다 (no any).",
+        "React 함수 컴포넌트만 사용하고 React.FC는 사용하지 않습니다.",
+        "가독성 높은 명명(축약 지양), 조기 반환, 얕은 중첩을 선호합니다.",
+        "경로 별칭 '@'는 'src'를 가리킵니다. import 경로를 이 규칙에 맞춥니다.",
+        "UI는 우선 'src/components/ui' 프리미티브를 사용합니다."
+      ]
+    },
+    {
+      "pattern": "src/components/**/*.{ts,tsx}",
+      "prompt": [
+        "스타일은 Tailwind 클래스로 작성하고 인라인 style은 필요한 경우에만 사용합니다.",
+        "컴포넌트 public API는 명확하고 최소화합니다 (불필요한 props 제거).",
+        "접근성: 대체 텍스트/aria-*를 적절히 추가합니다."
+      ]
+    },
+    {
+      "pattern": "src/styles/**/*.css",
+      "prompt": [
+        "Tailwind v4 구성을 유지합니다. 반드시 '@import \"tailwindcss\";'를 포함합니다.",
+        "글로벌 규칙은 'src/styles/globals.css'에만 추가합니다 (body는 m-0 p-0 유지)."
+      ]
+    },
+    {
+      "pattern": "src/components/property-*.tsx",
+      "prompt": [
+        "지도의 스크롤은 비활성, 사이드바만 스크롤 가능 상태를 유지합니다.",
+        "상단 필터/헤더는 좌우 2% 패딩을 유지합니다.",
+        "사이드바 리스트는 행(row) 형태, 항목 간 여백 없이 divide-y로 구분합니다."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "name": "dev",
+      "shell": "npm run dev",
+      "description": "Vite 개발 서버 실행"
+    },
+    {
+      "name": "build",
+      "shell": "npm run build",
+      "description": "타입 체크 및 프로덕션 빌드"
+    }
+  ]
+}
+
+
