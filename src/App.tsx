@@ -1,16 +1,16 @@
-import './App.css'
-import './index.css'
-import { PropertyProvider } from '@/contexts/property-context'
-import { PropertyFilters } from '@/components/property-filters'
-import { PropertyMap } from '@/components/property-map'
-import { PropertySidebar } from '@/components/property-sidebar'
+import './App.css';
+import './index.css';
+import { PropertyProvider } from '@/contexts/property-context';
+import { PropertyFilters } from '@/components/property-filters';
+import { PropertyMap } from '@/components/property-map';
+import { PropertySidebar } from '@/components/property-sidebar';
 
 function App() {
   return (
     <PropertyProvider>
       <div className="h-screen flex flex-col bg-background">
         <header className="border-b border-border bg-card">
-          <div className="px-6 py-4">
+          <div className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -31,8 +31,8 @@ function App() {
 
         <PropertyFilters />
 
-        <div className="flex-1 flex">
-          <div className="flex-1">
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 overflow-hidden">
             <PropertyMap />
           </div>
           <div className="w-96 border-l border-border">
@@ -41,7 +41,7 @@ function App() {
         </div>
       </div>
     </PropertyProvider>
-  )
+  );
 }
 
-export default App
+export default App;
