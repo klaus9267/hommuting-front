@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { usePropertyData } from '@/hooks/use-property-data';
 import { PropertyFilterModal } from '@/components/property-filter-modal';
 import { ChevronDown, MapPin, Bone as Won, Home } from 'lucide-react';
 
@@ -24,6 +25,7 @@ export function PropertyFilters() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'price' | 'area' | 'location' | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>({});
+  const { properties } = usePropertyData();
 
   const openFilterModal = (filterType: 'price' | 'area' | 'location') => {
     setActiveFilter(filterType);
@@ -64,7 +66,7 @@ export function PropertyFilters() {
   return (
     <>
       <div className="border-b border-border bg-card">
-        <div className="py-4 space-y-4">
+        <div className="py-4 px-[2%] space-y-4">
           {/* Property Types */}
           <div className="flex items-center gap-2">
             {propertyTypes.map(type => (
@@ -88,11 +90,7 @@ export function PropertyFilters() {
                 </Button>
               );
             })}
-            <div className="flex items-center gap-2 ml-auto">
-              <Badge variant="secondary" className="text-xs">
-                매물 1,234개
-              </Badge>
-            </div>
+            <div className="flex items-center gap-2 ml-auto"></div>
           </div>
         </div>
       </div>

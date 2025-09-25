@@ -8,9 +8,9 @@ import { PropertySidebar } from '@/components/property-sidebar';
 function App() {
   return (
     <PropertyProvider>
-      <div className="h-screen flex flex-col bg-background">
+      <div className="h-screen w-screen flex flex-col bg-background">
         <header className="border-b border-border bg-card">
-          <div className="py-4">
+          <div className="py-4 px-[2%]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -20,10 +20,6 @@ function App() {
                   <span className="text-muted-foreground">Home + commuting = </span>
                   <span className="text-primary font-bold">Hommuting</span>
                 </h1>
-              </div>
-              <div className="flex items-center gap-4">
-                <button className="text-sm text-muted-foreground hover:text-foreground">로그인</button>
-                <button className="text-sm text-muted-foreground hover:text-foreground">회원가입</button>
               </div>
             </div>
           </div>
