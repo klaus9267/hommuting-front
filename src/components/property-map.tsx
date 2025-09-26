@@ -1,19 +1,62 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { usePropertyContext } from '@/contexts/property-context';
-import { usePropertyData } from '@/hooks/use-property-data';
+import { useEffect, useRef, useState } from "react";
+import { usePropertyContext } from "@/contexts/property-context";
+import { usePropertyData } from "@/hooks/use-property-data";
 
 export function PropertyMap() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const { selectedProperty, hoveredProperty, setSelectedProperty, setHoveredProperty, mapCenter } = usePropertyContext();
+  const {
+    selectedProperty,
+    hoveredProperty,
+    setSelectedProperty,
+    setHoveredProperty,
+    mapCenter,
+  } = usePropertyContext();
   const { properties } = usePropertyData();
-  const [pinnedProperties, setPinnedProperties] = useState<any[]>([]);
+  // 선택된 매물만 단일로 표시
 
   useEffect(() => {
-    // This would be where you'd initialize your map (Kakao Map, Google Maps, etc.)
-    // For now, we'll create a mock map interface
-  }, []);
+    let map: any | null = null;
+    let containerEl: HTMLDivElement | null = null;
+    let cleanup: (() => void) | null = null;
+
+    async function init() {
+      const { loadKakaoMapsSdk } = await import("@/lib/kakao");
+      await loadKakaoMapsSdk();
+
+      // @ts-expect-error - kakao는 전역에 로드됩니다
+      const kakao = window.kakao;
+      if (!kakao) return;
+
+      // autoload=false로 로드했으므로 kakao.maps.load로 보장
+      kakao.maps.load(() => {
+        containerEl = mapRef.current;
+        if (!containerEl) return;
+
+        const center = new kakao.maps.LatLng(mapCenter.lat, mapCenter.lng);
+        map = new kakao.maps.Map(containerEl, {
+          center,
+          level: 5,
+        });
+
+        // 드래그/줌 시 중심 갱신이 필요하면 여기에서 context setter 사용 가능
+      });
+
+      cleanup = () => {
+        // 카카오맵은 명시적인 destroy API가 없어 DOM을 비워 정리
+        if (containerEl) {
+          containerEl.innerHTML = "";
+        }
+      };
+    }
+
+    init();
+
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [mapCenter.lat, mapCenter.lng]);
 
   // Mock property locations based on real Seoul coordinates
   const getPropertyLocation = (property: any) => {
@@ -33,25 +76,31 @@ export function PropertyMap() {
   };
 
   const getAddressOnly = (property: any) => {
-    if (!property || !property.title) return '';
+    if (!property || !property.title) return "";
     const type: string | undefined = property.type;
-    if (type && typeof type === 'string' && property.title.endsWith(type)) {
-      return property.title.slice(0, property.title.length - type.length).trim();
+    if (type && typeof type === "string" && property.title.endsWith(type)) {
+      return property.title
+        .slice(0, property.title.length - type.length)
+        .trim();
     }
     return property.title;
   };
 
-  // 누적 핀: 선택될 때마다 작은 카드가 버블 위로 쌓이도록 저장
-  useEffect(() => {
-    if (!selectedProperty) return;
-    setPinnedProperties(prev => [...prev, selectedProperty]);
-  }, [selectedProperty]);
+  // 누적 표시 제거: 선택된 매물 하나만 표시하므로 별도 배열 상태 불필요
 
   // Group properties by map location to show count bubbles like Zigbang
   const groupedByLocation = (() => {
-    const groups: Array<{ key: string; lat: number; lng: number; items: any[] }> = [];
-    const map = new Map<string, { key: string; lat: number; lng: number; items: any[] }>();
-    properties.slice(0, 20).forEach(p => {
+    const groups: Array<{
+      key: string;
+      lat: number;
+      lng: number;
+      items: any[];
+    }> = [];
+    const map = new Map<
+      string,
+      { key: string; lat: number; lng: number; items: any[] }
+    >();
+    properties.slice(0, 20).forEach((p) => {
       const loc = getPropertyLocation(p);
       const key = `${loc.lat},${loc.lng}`;
       if (!map.has(key)) {
@@ -59,47 +108,58 @@ export function PropertyMap() {
       }
       map.get(key)!.items.push(p);
     });
-    map.forEach(v => groups.push(v));
+    map.forEach((v) => groups.push(v));
     return groups;
   })();
 
   return (
     <div className="relative w-full h-full bg-muted">
       {/* Mock Map Background */}
-      <div
-        ref={mapRef}
-        className="w-full h-full bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23e5e7eb' fillOpacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      >
+      <div ref={mapRef} className="w-full h-full relative overflow-hidden">
         {/* Property Markers - clustered bubbles with counts */}
-        {groupedByLocation.map(group => {
+        {groupedByLocation.map((group) => {
           const left = 45 + (group.lng - 126.978) * 2000;
           const top = 50 + (37.5665 - group.lat) * 2000;
           return (
-            <div key={group.key} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" style={{ left: `${left}%`, top: `${top}%` }} onClick={() => setSelectedProperty(group.items[0])}>
-              <div className="w-9 h-9 rounded-full bg-white border border-border shadow-md flex items-center justify-center text-sm font-semibold text-foreground">{group.items.length}</div>
-            </div>
-          );
-        })}
-
-        {/* Selected mini-card marker (thumbnail + price only) */}
-        {pinnedProperties.map((p, idx) => {
-          const loc = getPropertyLocation(p);
-          const left = 45 + (loc.lng - 126.978) * 2000;
-          const top = 50 + (37.5665 - loc.lat) * 2000;
-          return (
-            <div key={`${p.id}-${idx}`} className="absolute transform -translate-x-1/2 -translate-y-[120%]" style={{ left: `${left}%`, top: `${top}%`, zIndex: 30 + idx }}>
-              <div className="bg-card/95 backdrop-blur border border-border rounded-md p-2 shadow-xl w-[140px] pointer-events-none">
-                <div className="flex flex-col items-center gap-1">
-                  <img src={p.images?.[0] || '/placeholder.svg'} alt={p.title} className="w-14 h-14 object-cover rounded-sm" />
-                  <div className="text-xs font-semibold text-primary leading-tight">{p.price}</div>
-                </div>
+            <div
+              key={group.key}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+              style={{ left: `${left}%`, top: `${top}%` }}
+              onClick={() => setSelectedProperty(group.items[0])}
+            >
+              <div className="w-9 h-9 rounded-full bg-white border border-border shadow-md flex items-center justify-center text-sm font-semibold text-foreground">
+                {group.items.length}
               </div>
             </div>
           );
         })}
+
+        {/* 선택된 매물 단일 미니 카드 마커 */}
+        {selectedProperty &&
+          (() => {
+            const loc = getPropertyLocation(selectedProperty);
+            const left = 45 + (loc.lng - 126.978) * 2000;
+            const top = 50 + (37.5665 - loc.lat) * 2000;
+            return (
+              <div
+                className="absolute transform -translate-x-1/2 -translate-y-[120%]"
+                style={{ left: `${left}%`, top: `${top}%`, zIndex: 30 }}
+              >
+                <div className="bg-card/95 backdrop-blur border border-border rounded-md p-2 shadow-xl w-[140px] pointer-events-none">
+                  <div className="flex flex-col items-center gap-1">
+                    <img
+                      src={selectedProperty.images?.[0] || "/placeholder.svg"}
+                      alt={selectedProperty.title}
+                      className="w-14 h-14 object-cover rounded-sm"
+                    />
+                    <div className="text-xs font-semibold text-primary leading-tight">
+                      {selectedProperty.price}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
         {/* Map Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
@@ -123,18 +183,34 @@ export function PropertyMap() {
           <div className="absolute bottom-4 left-4 right-20">
             <div className="bg-card border border-border rounded-lg p-4 shadow-xl max-w-md">
               <div className="flex gap-4">
-                <img src={selectedProperty.images?.[0] || '/placeholder.svg'} alt={selectedProperty.title} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
+                <img
+                  src={selectedProperty.images?.[0] || "/placeholder.svg"}
+                  alt={selectedProperty.title}
+                  className="w-20 h-20 object-cover rounded-md flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span className="px-1.5 py-0.5 border border-border rounded-sm bg-background/60 text-foreground/80">{selectedProperty.type}</span>
+                    <span className="px-1.5 py-0.5 border border-border rounded-sm bg-background/60 text-foreground/80">
+                      {selectedProperty.type}
+                    </span>
                   </div>
-                  <div className="text-base font-semibold text-primary mt-1">{selectedProperty.price}</div>
-                  {selectedProperty.maintenanceFee && <div className="text-sm font-semibold text-primary mt-0.5">{selectedProperty.maintenanceFee}</div>}
-                  <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{getAddressOnly(selectedProperty)}</div>
+                  <div className="text-base font-semibold text-primary mt-1">
+                    {selectedProperty.price}
+                  </div>
+                  {selectedProperty.maintenanceFee && (
+                    <div className="text-sm font-semibold text-primary mt-0.5">
+                      {selectedProperty.maintenanceFee}
+                    </div>
+                  )}
+                  <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
+                    {getAddressOnly(selectedProperty)}
+                  </div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">
                     {selectedProperty.area} · {selectedProperty.floor}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{selectedProperty.description}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
+                    {selectedProperty.description}
+                  </div>
                 </div>
               </div>
             </div>
